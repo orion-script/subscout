@@ -24,7 +24,7 @@
 1. **Clone the repo**
 
    ```bash
-   git clone https://github.com/your-username/subscout.git
+   git clone https://github.com/orion-script/subscout.git
    cd subscout
    ```
 

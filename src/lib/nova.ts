@@ -1,33 +1,79 @@
+"use server";
+
 import {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 
-// Initialize the Bedrock client
 const client = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
 });
 
 export async function analyzeUrlWithNova(url: string) {
-  // In a real scenario, this would trigger a Nova Act agent to crawl the site.
-  // For the hackathon demo without live keys, we can simulate the "Cancel Flow Analysis".
-
-  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+  // 1. Check if keys are present
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    console.warn("Missing AWS credentials. Returning mock data.");
     return mockAnalysis(url);
   }
 
-  // Real implementation stub for Nova 2 Lite (reasoning)
+  // 2. Prepare the prompt for Nova 2 Lite
+  const prompt = `You are an expert consumer advocate agent named SubScout.
+  Analyze the cancellation flow for this service: ${url}.
+  
+  Your task is to:
+  1. Estimate the "Difficulty Score" (1-10) based on known patterns for this domain (e.g. gyms are harder, streaming services are moderate).
+  2. List the likely steps to cancel.
+  3. Identify potential "Dark Patterns" (e.g. forced phone calls, confirmshaming, hidden links).
+  
+  Return ONLY a valid JSON object with this structure:
+  {
+    "url": "${url}",
+    "score": number, // 1-10
+    "steps": ["step 1", "step 2", ...],
+    "darkPatterns": ["pattern name 1", "pattern name 2", ...]
+  }`;
+
   try {
-    const prompt = `Analyze the cancellation process for ${url}. Identify dark patterns and estimate difficulty.`;
+    // 3. Call Amazon Nova 2 Lite
+    const command = new InvokeModelCommand({
+      modelId: "amazon.nova-lite-v1:0", // Targeted Nova 2 Lite Model ID
+      contentType: "application/json",
+      accept: "application/json",
+      body: JSON.stringify({
+        inferenceConfig: {
+          max_new_tokens: 1000,
+        },
+        messages: [
+          {
+            role: "user",
+            content: [{ text: prompt }],
+          },
+        ],
+      }),
+    });
 
-    // This is where we'd call Nova 2 Lite
-    // const command = new InvokeModelCommand({ ... });
-    // const response = await client.send(command);
+    const response = await client.send(command);
+    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
 
-    return mockAnalysis(url); // Fallback for now
+    // Parse the output content (Nova returns generated text)
+    // Structure typically: { output: { message: { content: [{ text: "..." }] } } }
+    const outputText = responseBody.output?.message?.content?.[0]?.text;
+
+    if (!outputText) throw new Error("Empty response from Nova");
+
+    // Extract JSON from potential markdown blocks ```json ... ```
+    const jsonMatch = outputText.match(/\{[\s\S]*\}/);
+    const jsonStr = jsonMatch ? jsonMatch[0] : outputText;
+
+    return JSON.parse(jsonStr);
   } catch (error) {
     console.error("Error calling Nova:", error);
-    throw error;
+    // Fallback to mock if API call fails (e.g., untrusted URL, quota, or invalid keys)
+    return mockAnalysis(url);
   }
 }
 

@@ -10,6 +10,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 import { analyzeUrlWithNova } from "@/lib/nova";
 
 export default function Home() {
@@ -49,14 +51,18 @@ export default function Home() {
           </div>
           <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
             <nav className="flex items-center space-x-6 text-sm font-medium">
-              <a
-                href="#how-it-works"
+              <button
+                onClick={() =>
+                  document
+                    .getElementById("features")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
                 className="transition-colors hover:text-foreground/80 text-foreground/60"
               >
                 How it works
-              </a>
+              </button>
               <a
-                href="https://github.com/your-username/subscout"
+                href="https://github.com/orion-script/subscout"
                 className="transition-colors hover:text-foreground/80 text-foreground/60"
               >
                 GitHub
