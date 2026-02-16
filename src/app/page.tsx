@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import {
   Search,
@@ -77,12 +76,12 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="flex-1 space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32">
-        <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center">
+        <div className="container flex max-w-5xl flex-col items-center gap-4 text-center">
           <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
             Stop paying for things <br className="hidden md:block" />
             you don&apos;t use.
           </h1>
-          <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
+          <p className="max-w-2xl leading-normal text-muted-foreground sm:text-xl sm:leading-8">
             SubScout uses <strong>Amazon Nova Act</strong> to navigate complex
             cancellation flows for you. Enter a URL, and our agent will find the
             hidden "Cancel" button.
